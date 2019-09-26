@@ -69,15 +69,16 @@ def multiplayer(driver, errors_boolean, num_iterations=200):
 			print('Not more words found. You probably won ;)')
 
 
-def train(driver, errors_boolean, groups):
+def train(driver, errors_boolean, groups, category=0):
 	time.sleep(2)
-	for i in range(groups,9):
-		for j in range(0, 7):
-			driver.get('https://10fastfingers.com/top1000/english/sc-%s%s/' % (str(i), str(j)))
-			n = driver.find_element_by_id('row1')
-			children_xpath = n.find_elements_by_xpath('.//*')
-			print('Size of words: %d' % len(children_xpath))
-			soloplayer('special_mode', driver, errors_boolean, len(children_xpath))
+	for i in range(category,2):
+		for j in range(groups,10):
+			for k in range(0, 7):
+				driver.get('https://10fastfingers.com/top1000/english/sc-%s%s%s/' % (str(i), str(j), str(k)))
+				n = driver.find_element_by_id('row1')
+				children_xpath = n.find_elements_by_xpath('.//*')
+				print('Size of words: %d' % len(children_xpath))
+				soloplayer('special_mode', driver, errors_boolean, len(children_xpath))
 
 
 def do_login(driver):
@@ -106,11 +107,14 @@ def main():
 	mode = input('Please, introduce which mode you want to play: (normal/advanced/multiplayer/train) ')
 	fails = input('Do you want failures to happen? (yes/no) ')
 	groups = ''
+	category = ''
 	if mode == 'train':
 		groups = input('Which level group do you want to start at? ')
+		category = input('Category? (0/1) ')
 
 	try:
 		groups = int(groups)
+		category = int(category)
 	except ValueError:
 		print('Invalid number')
 		exit(-1)
@@ -121,7 +125,7 @@ def main():
 		multiplayer(driver, True)
 	elif mode == 'train':
 		do_login(driver)
-		train(driver, True, groups)
+		train(driver, True, groups, category)
 	else:
 		print('Something went wrong. Exiting...')
 		exit(-1)
