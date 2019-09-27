@@ -8,20 +8,26 @@ from selenium.common.exceptions import TimeoutException
 import random
 import os
 
-def soloplayer(mode, driver, errors_boolean, num_iterations=200):
+
+
+def soloplayer(mode, driver):
 	print('Starting normal mode')
 	if mode == 'normal':
 		driver.get('https://10fastfingers.com/typing-test/english')
 	elif mode == 'advanced':
 		driver.get('https://10fastfingers.com/advanced-typing-test/english')
 
+	n = driver.find_element_by_id('row1')
+	children_xpath = n.find_elements_by_xpath('.//*')
+	print('Size of words: %d' % len(children_xpath))
+
 	words = list()
-	for i in range(num_iterations):
+	for i in range(len(children_xpath)):
 		words.append(driver.find_element_by_xpath('//*[@id="row1"]/span[%s]' % str(i+1)).get_attribute('innerHTML'))
 		print('Reading %d' % i)
-		if i < int(num_iterations/3):
+		if i < int(len(children_xpath)/3):
 			print('_' * (i+1))
-		elif i > int(num_iterations/3) and i < int(2*num_iterations/3):
+		elif i > int(len(children_xpath)/3) and i < int(2*len(children_xpath)/3):
 			print('+' * (i+1))
 		else:
 			print('*' * (i+1))
@@ -31,23 +37,18 @@ def soloplayer(mode, driver, errors_boolean, num_iterations=200):
 
 	print(words)
 
-	if errors_boolean is True:
-		for i in range(len(words)):
-			number = random.uniform(0,1)
-			if number <= 0.05:
-				# input_field = driver.find_element_by_id('inputfield').send_keys(str(hex(id(number))) + ' ')
-				input_field = driver.find_element_by_id('inputfield').send_keys('oops' + ' ')
-			else:
-				input_field = driver.find_element_by_id('inputfield').send_keys(words[i] + ' ')
-			time.sleep(.42)
-	else:
-		for i in range(len(words)):
+	for i in range(len(words)):
+		number = random.uniform(0,1)
+		if number <= 0.05:
+			# input_field = driver.find_element_by_id('inputfield').send_keys(str(hex(id(number))) + ' ')
+			input_field = driver.find_element_by_id('inputfield').send_keys('oops' + ' ')
+		else:
 			input_field = driver.find_element_by_id('inputfield').send_keys(words[i] + ' ')
-			time.sleep(.42)
+		time.sleep(.42)
 
 
 # WIP: does not detect field multiplayer_input
-def multiplayer(driver, errors_boolean, num_iterations=200):
+def multiplayer(driver):
 	print('Starting multiplayer mode')
 
 	driver.get('https://10fastfingers.com/multiplayer')
@@ -69,7 +70,7 @@ def multiplayer(driver, errors_boolean, num_iterations=200):
 			print('Not more words found. You probably won ;)')
 
 
-def train(driver, errors_boolean, groups, category=0):
+def train(driver, groups, category=0):
 	time.sleep(2)
 	for i in range(category,2):
 		for j in range(groups,10):
@@ -102,30 +103,39 @@ def wait():
 
 
 def main():
-	driver = webdriver.Chrome('/home/j/Downloads/chromedriver')
+	# driver = webdriver.Chrome('/home/j/Downloads/chromedriver')
+	driver = webdriver.Chrome('/home/jasper/Downloads/geckodriver-v0.25.0-linux64')
 
-	mode = input('Please, introduce which mode you want to play: (normal/advanced/multiplayer/train) ')
-	fails = input('Do you want failures to happen? (yes/no) ')
+	mode = input('Please, introduce which mode you want to play: (normal/advanced/multiplayer/train/spam_normal) ')
 	groups = ''
 	category = ''
+	num_games = ''
+
 	if mode == 'train':
 		groups = input('Which level group do you want to start at? ')
 		category = input('Category? (0/1) ')
+	if mode == 'spam_normal':
+		num_games = input('How many games do you want to play? ')
+
 
 	try:
 		groups = int(groups)
 		category = int(category)
+		num_games = int(num_games)
 	except ValueError:
 		print('Invalid number')
 		exit(-1)
 
 	if mode == 'normal' or mode == 'advanced':
-		soloplayer(mode, driver, True)
+		soloplayer(mode, driver)
 	elif mode == 'multiplayer':
-		multiplayer(driver, True)
+		multiplayer(driver)
 	elif mode == 'train':
 		do_login(driver)
-		train(driver, True, groups, category)
+		train(driver, groups, category)
+	elif mode == 'num_games':
+		for i in num_games:
+			soloplayer('normal', driver)
 	else:
 		print('Something went wrong. Exiting...')
 		exit(-1)
