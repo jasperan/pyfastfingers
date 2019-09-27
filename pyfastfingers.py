@@ -10,27 +10,37 @@ import os
 
 
 
-def soloplayer(mode, driver):
+def soloplayer(mode, driver, num_iterations=140):
 	print('Starting normal mode')
 	if mode == 'normal':
 		driver.get('https://10fastfingers.com/typing-test/english')
 	elif mode == 'advanced':
 		driver.get('https://10fastfingers.com/advanced-typing-test/english')
-
+	time.sleep(2)
 	n = driver.find_element_by_id('row1')
 	children_xpath = n.find_elements_by_xpath('.//*')
 	print('Size of words: %d' % len(children_xpath))
-
 	words = list()
-	for i in range(len(children_xpath)):
-		words.append(driver.find_element_by_xpath('//*[@id="row1"]/span[%s]' % str(i+1)).get_attribute('innerHTML'))
-		print('Reading %d' % i)
-		if i < int(len(children_xpath)/3):
-			print('_' * (i+1))
-		elif i > int(len(children_xpath)/3) and i < int(2*len(children_xpath)/3):
-			print('+' * (i+1))
-		else:
-			print('*' * (i+1))
+	if num_iterations == 140:
+		for i in range(len(children_xpath)):
+			words.append(driver.find_element_by_xpath('//*[@id="row1"]/span[%s]' % str(i+1)).get_attribute('innerHTML'))
+			print('Reading %d' % i)
+			if i < int(len(children_xpath)/3):
+				print('_' * (i+1))
+			elif i > int(len(children_xpath)/3) and i < int(2*len(children_xpath)/3):
+				print('+' * (i+1))
+			else:
+				print('*' * (i+1))
+	else:
+		for i in range(num_iterations):
+			words.append(driver.find_element_by_xpath('//*[@id="row1"]/span[%s]' % str(i+1)).get_attribute('innerHTML'))
+			print('Reading %d' % i)
+			if i < int(num_iterations/3):
+				print('_' * (i+1))
+			elif i > int(num_iterations/3) and i < int(2*num_iterations/3):
+				print('+' * (i+1))
+			else:
+				print('*' * (i+1))
 
 
 	print('Finished reading!')
@@ -39,7 +49,7 @@ def soloplayer(mode, driver):
 
 	for i in range(len(words)):
 		number = random.uniform(0,1)
-		if number <= 0.05:
+		if number <= 0.035:
 			# input_field = driver.find_element_by_id('inputfield').send_keys(str(hex(id(number))) + ' ')
 			driver.find_element_by_id('inputfield').send_keys('oops')
 			driver.find_element_by_id('inputfield').send_keys(' ')
@@ -47,7 +57,7 @@ def soloplayer(mode, driver):
 			driver.find_element_by_id('inputfield').send_keys(words[i])
 			driver.find_element_by_id('inputfield').send_keys(' ')
 
-		time.sleep(.42)
+		time.sleep(.55)
 
 
 # WIP: does not detect field multiplayer_input
@@ -85,6 +95,7 @@ def train(driver, groups, category=0):
 				soloplayer('special_mode', driver, errors_boolean, len(children_xpath))
 
 
+
 def do_login(driver):
 	driver.get('https://10fastfingers.com/login')
 
@@ -100,6 +111,23 @@ def do_login(driver):
 
 
 
+def competition(driver):
+	time.sleep(2)
+	driver.get('https://10fastfingers.com/competitions')
+
+	num_available_competitions = len(driver.find_element_by_xpath('//*[@id="join-competition-table"]/tbody').find_elements_by_xpath('.//*'))
+	print('Available competitions: %d' % num_available_competitions)
+	while True:
+		for i in range(num_available_competitions):
+			for j in range(5):
+				driver.get('https://10fastfingers.com/competitions')
+				driver.find_element_by_xpath('//*[@id="join-competition-table"]/tbody/tr[%s]/td[2]/a' % str(i+1)).click()
+				soloplayer('special', driver)
+
+
+
+
+
 def wait():
 	while True:
 		time.sleep(1)
@@ -107,10 +135,9 @@ def wait():
 
 
 def main():
-	# driver = webdriver.Chrome('/home/j/Downloads/chromedriver')
-	driver = webdriver.Firefox()
+	driver = webdriver.Chrome()
 
-	mode = input('Please, introduce which mode you want to play: (normal/advanced/multiplayer/train/spam_normal) ')
+	mode = input('Please, introduce which mode you want to play: (normal/advanced/multiplayer/train/spam_normal/spam_advanced/competition) ')
 	groups = ''
 	category = ''
 	num_games = ''
@@ -124,7 +151,7 @@ def main():
 		except ValueError:
 			print('Invalid number')
 			exit(-1)
-	if mode == 'spam_normal':
+	elif mode == 'spam_normal' or mode == 'spam_advanced':
 		try:
 			num_games = int(input('How many games do you want to play? '))
 		except ValueError:
@@ -135,16 +162,23 @@ def main():
 
 
 	if mode == 'normal' or mode == 'advanced':
-		soloplayer(mode, driver)
+		soloplayer(mode, driver, 105) # 105 to play only 105 words instead of the whole set
 	elif mode == 'multiplayer':
 		multiplayer(driver)
 	elif mode == 'train':
 		do_login(driver)
 		train(driver, groups, category)
 	elif mode == 'spam_normal':
+		do_login(driver)
 		for i in range(num_games):
-			do_login(driver)
-			soloplayer('normal', driver)
+			soloplayer('normal', driver, 105)
+	elif mode == 'spam_advanced':
+		do_login(driver)
+		for i in range(num_games):
+			soloplayer('advanced', driver, 105)
+	elif mode == 'competition':
+		do_login(driver)
+		competition(driver)
 	else:
 		print('Something went wrong. Exiting...')
 		exit(-1)
