@@ -41,9 +41,12 @@ def soloplayer(mode, driver):
 		number = random.uniform(0,1)
 		if number <= 0.05:
 			# input_field = driver.find_element_by_id('inputfield').send_keys(str(hex(id(number))) + ' ')
-			input_field = driver.find_element_by_id('inputfield').send_keys('oops' + ' ')
+			driver.find_element_by_id('inputfield').send_keys('oops')
+			driver.find_element_by_id('inputfield').send_keys(' ')
 		else:
-			input_field = driver.find_element_by_id('inputfield').send_keys(words[i] + ' ')
+			driver.find_element_by_id('inputfield').send_keys(words[i])
+			driver.find_element_by_id('inputfield').send_keys(' ')
+
 		time.sleep(.42)
 
 
@@ -93,6 +96,7 @@ def do_login(driver):
 	login_button = driver.find_element_by_id('login-form-submit')
 	login_button.click()
 	# Login complete
+	time.sleep(2)
 
 
 
@@ -104,7 +108,7 @@ def wait():
 
 def main():
 	# driver = webdriver.Chrome('/home/j/Downloads/chromedriver')
-	driver = webdriver.Chrome('/home/jasper/Downloads/geckodriver-v0.25.0-linux64')
+	driver = webdriver.Firefox()
 
 	mode = input('Please, introduce which mode you want to play: (normal/advanced/multiplayer/train/spam_normal) ')
 	groups = ''
@@ -114,17 +118,21 @@ def main():
 	if mode == 'train':
 		groups = input('Which level group do you want to start at? ')
 		category = input('Category? (0/1) ')
+		try:
+			groups = int(groups)
+			category = int(category)
+		except ValueError:
+			print('Invalid number')
+			exit(-1)
 	if mode == 'spam_normal':
-		num_games = input('How many games do you want to play? ')
+		try:
+			num_games = int(input('How many games do you want to play? '))
+		except ValueError:
+			print('Invalid number of games')
+			exit(-1)
 
 
-	try:
-		groups = int(groups)
-		category = int(category)
-		num_games = int(num_games)
-	except ValueError:
-		print('Invalid number')
-		exit(-1)
+
 
 	if mode == 'normal' or mode == 'advanced':
 		soloplayer(mode, driver)
@@ -133,8 +141,9 @@ def main():
 	elif mode == 'train':
 		do_login(driver)
 		train(driver, groups, category)
-	elif mode == 'num_games':
-		for i in num_games:
+	elif mode == 'spam_normal':
+		for i in range(num_games):
+			do_login(driver)
 			soloplayer('normal', driver)
 	else:
 		print('Something went wrong. Exiting...')
